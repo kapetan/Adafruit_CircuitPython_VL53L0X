@@ -45,10 +45,7 @@ Implementation Notes
   https://github.com/adafruit/circuitpython/releases
 * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 """
-import math
 import time
-
-import adafruit_bus_device.i2c_device as i2c_device
 from micropython import const
 
 __version__ = "0.0.0-auto.0"
@@ -119,7 +116,7 @@ _VCSEL_PERIOD_FINAL_RANGE = const(1)
 
 def _decode_timeout(val):
     # format: "(LSByte * 2^MSByte) + 1"
-    return float(val & 0xFF) * math.pow(2.0, ((val & 0xFF00) >> 8)) + 1
+    return float(val & 0xFF) * (2**((val & 0xFF00) >> 8)) + 1
 
 
 def _encode_timeout(timeout_mclks):
@@ -152,12 +149,15 @@ class VL53L0X:
     # Class-level buffer for reading and writing data with the sensor.
     # This reduces memory allocations but means the code is not re-entrant or
     # thread safe!
-    _BUFFER = bytearray(3)
+    _BUFFER_8 = bytearray(1)
+    _BUFFER_16 = bytearray(2)
+    _BUFFER_24 = bytearray(3)
 
-    def __init__(self, i2c, address=41, io_timeout_s=0):
+    def __init__(self, i2c, address=41, io_timeout_ms=0):
         # pylint: disable=too-many-statements
-        self._device = i2c_device.I2CDevice(i2c, address)
-        self.io_timeout_s = io_timeout_s
+        self._i2c = i2c
+        self._address = address
+        self.io_timeout_ms = io_timeout_ms
         # Check identification registers for expected values.
         # From section 3.2 of the datasheet.
         if (
@@ -189,11 +189,13 @@ class VL53L0X:
         # VL53L0X_get_info_from_device() in the API, but the same data seems to
         # be more easily readable from GLOBAL_CONFIG_SPAD_ENABLES_REF_0 through
         # _6, so read it from there.
-        ref_spad_map = bytearray(7)
-        ref_spad_map[0] = _GLOBAL_CONFIG_SPAD_ENABLES_REF_0
-        with self._device:
-            self._device.write(ref_spad_map, end=1)
-            self._device.readinto(ref_spad_map, start=1)
+        ref_spad_map = bytearray(6)
+
+        self._BUFFER_8[0] = _GLOBAL_CONFIG_SPAD_ENABLES_REF_0
+        self._i2c.writeto(self._address, self._BUFFER_8)
+        self._i2c.readfrom_into(self._address, ref_spad_map)
+
+        ref_spad_map = self._BUFFER_8 + ref_spad_map
 
         for pair in (
             (0xFF, 0x01),
@@ -214,8 +216,9 @@ class VL53L0X:
                 ref_spad_map[1 + (i // 8)] &= ~(1 << (i % 8))
             elif (ref_spad_map[1 + (i // 8)] >> (i % 8)) & 0x1 > 0:
                 spads_enabled += 1
-        with self._device:
-            self._device.write(ref_spad_map)
+
+        self._i2c.writeto(self._address, ref_spad_map)
+
         for pair in (
             (0xFF, 0x01),
             (0x00, 0x00),
@@ -318,34 +321,30 @@ class VL53L0X:
 
     def _read_u8(self, address):
         # Read an 8-bit unsigned value from the specified 8-bit address.
-        with self._device:
-            self._BUFFER[0] = address & 0xFF
-            self._device.write(self._BUFFER, end=1)
-            self._device.readinto(self._BUFFER, end=1)
-        return self._BUFFER[0]
+        self._BUFFER_8[0] = address & 0xFF
+        self._i2c.writeto(self._address, self._BUFFER_8)
+        self._i2c.readfrom_into(self._address, self._BUFFER_8)
+        return self._BUFFER_8[0]
 
     def _read_u16(self, address):
         # Read a 16-bit BE unsigned value from the specified 8-bit address.
-        with self._device:
-            self._BUFFER[0] = address & 0xFF
-            self._device.write(self._BUFFER, end=1)
-            self._device.readinto(self._BUFFER)
-        return (self._BUFFER[0] << 8) | self._BUFFER[1]
+        self._BUFFER_8[0] = address & 0xFF
+        self._i2c.writeto(self._address, self._BUFFER_8)
+        self._i2c.readfrom_into(self._address, self._BUFFER_16)
+        return (self._BUFFER_16[0] << 8) | self._BUFFER_16[1]
 
     def _write_u8(self, address, val):
         # Write an 8-bit unsigned value to the specified 8-bit address.
-        with self._device:
-            self._BUFFER[0] = address & 0xFF
-            self._BUFFER[1] = val & 0xFF
-            self._device.write(self._BUFFER, end=2)
+        self._BUFFER_16[0] = address & 0xFF
+        self._BUFFER_16[1] = val & 0xFF
+        self._i2c.writeto(self._address, self._BUFFER_16)
 
     def _write_u16(self, address, val):
         # Write a 16-bit BE unsigned value to the specified 8-bit address.
-        with self._device:
-            self._BUFFER[0] = address & 0xFF
-            self._BUFFER[1] = (val >> 8) & 0xFF
-            self._BUFFER[2] = val & 0xFF
-            self._device.write(self._BUFFER)
+        self._BUFFER_24[0] = address & 0xFF
+        self._BUFFER_24[1] = (val >> 8) & 0xFF
+        self._BUFFER_24[2] = val & 0xFF
+        self._i2c.writeto(self._address, self._BUFFER_24)
 
     def _get_spad_info(self):
         # Get reference SPAD count and type, returned as a 2-tuple of
@@ -362,11 +361,11 @@ class VL53L0X:
             (0x83, 0x00),
         ):
             self._write_u8(pair[0], pair[1])
-        start = time.monotonic()
+        start = time.ticks_ms()
         while self._read_u8(0x83) == 0x00:
             if (
-                self.io_timeout_s > 0
-                and (time.monotonic() - start) >= self.io_timeout_s
+                self.io_timeout_ms > 0
+                and time.ticks_diff(time.ticks_ms(), start) >= self.io_timeout_ms
             ):
                 raise RuntimeError("Timeout waiting for VL53L0X!")
         self._write_u8(0x83, 0x01)
@@ -383,11 +382,11 @@ class VL53L0X:
     def _perform_single_ref_calibration(self, vhv_init_byte):
         # based on VL53L0X_perform_single_ref_calibration() from ST API.
         self._write_u8(_SYSRANGE_START, 0x01 | vhv_init_byte & 0xFF)
-        start = time.monotonic()
+        start = time.ticks_ms()
         while (self._read_u8(_RESULT_INTERRUPT_STATUS) & 0x07) == 0:
             if (
-                self.io_timeout_s > 0
-                and (time.monotonic() - start) >= self.io_timeout_s
+                self.io_timeout_ms > 0
+                and time.ticks_diff(time.ticks_ms(), start) >= self.io_timeout_ms
             ):
                 raise RuntimeError("Timeout waiting for VL53L0X!")
         self._write_u8(_SYSTEM_INTERRUPT_CLEAR, 0x01)
@@ -541,18 +540,18 @@ class VL53L0X:
             (_SYSRANGE_START, 0x01),
         ):
             self._write_u8(pair[0], pair[1])
-        start = time.monotonic()
+        start = time.ticks_ms()
         while (self._read_u8(_SYSRANGE_START) & 0x01) > 0:
             if (
-                self.io_timeout_s > 0
-                and (time.monotonic() - start) >= self.io_timeout_s
+                self.io_timeout_ms > 0
+                and time.ticks_diff(time.ticks_ms(), start) >= self.io_timeout_ms
             ):
                 raise RuntimeError("Timeout waiting for VL53L0X!")
-        start = time.monotonic()
+        start = time.ticks_ms()
         while (self._read_u8(_RESULT_INTERRUPT_STATUS) & 0x07) == 0:
             if (
-                self.io_timeout_s > 0
-                and (time.monotonic() - start) >= self.io_timeout_s
+                self.io_timeout_ms > 0
+                and time.ticks_diff(time.ticks_ms(), start) >= self.io_timeout_ms
             ):
                 raise RuntimeError("Timeout waiting for VL53L0X!")
         # assumptions: Linearity Corrective Gain is 1000 (default)
@@ -576,4 +575,4 @@ class VL53L0X:
             "SHDN" pin is pulled HIGH again the default I2C address is ``0x29``.
         """
         self._write_u8(_I2C_SLAVE_DEVICE_ADDRESS, new_address & 0x7F)
-        self._device.device_address = new_address
+        self._address = new_address
