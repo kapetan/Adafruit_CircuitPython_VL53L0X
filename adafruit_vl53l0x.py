@@ -614,7 +614,7 @@ class VL53L0X:
         else:
             self._write_u8(_SYSRANGE_START, 0x02)
 
-        self._continuous_mode = False
+        self._continuous_mode = True
 
     def stop_continuous(self):
         """Stop continuous measurements.
