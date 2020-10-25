@@ -1,70 +1,47 @@
+MicroPython VL53L0X
+===================
 
-Introduction
-============
+MicroPython driver for the VL53L0X distance sensor.
 
-.. image:: https://readthedocs.org/projects/adafruit-circuitpython-vl53l0x/badge/?version=latest
-    :target: https://circuitpython.readthedocs.io/projects/vl53l0x/en/latest/
-    :alt: Documentation Status
+Forked from [Adafruit CircuitPython VL53L0X](https://github.com/adafruit/Adafruit_CircuitPython_VL53L0X) and modified to work with MicroPython 1.12.
 
-.. image :: https://img.shields.io/discord/327254708534116352.svg
-    :target: https://adafru.it/discord
-    :alt: Discord
+Usage
+=====
 
-.. image:: https://github.com/adafruit/Adafruit_CircuitPython_VL53L0X/workflows/Build%20CI/badge.svg
-    :target: https://github.com/adafruit/Adafruit_CircuitPython_VL53L0X/actions/
-    :alt: Build Status
+.. code-block:: python
+    import machine
+    import vl53l0x
 
-CircuitPython driver for the VL53L0X distance sensor.
+    # Initialize I2C bus and sensor.
+    i2c = machine.I2C(1, freq = 400000)
+    vl53 = vl53l0x.VL53L0X(i2c)
 
-Dependencies
-=============
-This driver depends on:
+    # Optionally set the timing budget. A timing budget of 20 milliseconds
+    # results in faster but less accurate measurements.
+    # For more accuracy set the timing budget to 200 milliseconds.
+    # The default is around 33 milliseconds.
+    vl53.measurement_timing_budget = 20000 # microseconds
 
-* `Adafruit CircuitPython <https://github.com/adafruit/circuitpython>`_
-* `Bus Device <https://github.com/adafruit/Adafruit_CircuitPython_BusDevice>`_
+    # Optionally start continuous measurement mode.
+    vl53.start_continuous()
 
-Please ensure all dependencies are available on the CircuitPython filesystem.
-This is easily achieved by downloading
-`the Adafruit library and driver bundle <https://github.com/adafruit/Adafruit_CircuitPython_Bundle>`_.
+    while True:
+        print("Range: {0}mm".format(vl53.range))
+        time.sleep(1)
 
-Installing from PyPI
-====================
+Build
+=====
 
-On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
-PyPI <https://pypi.org/project/adafruit-circuitpython-vl53l0x/>`_. To install for current user:
-
-.. code-block:: shell
-
-    pip3 install adafruit-circuitpython-vl53l0x
-
-To install system-wide (this may be required in some cases):
+Build `.mpy` files locally:
 
 .. code-block:: shell
 
-    sudo pip3 install adafruit-circuitpython-vl53l0x
-
-To install in a virtual environment in your current project:
-
-.. code-block:: shell
-
-    mkdir project-name && cd project-name
-    python3 -m venv .env
-    source .env/bin/activate
-    pip3 install adafruit-circuitpython-vl53l0x
+    make virtual
+    $(make virtual-activate)
+    make requirements-install
+    make build
 
 Usage Example
 =============
 
 See usage in the examples/vl53l0x_simpletest.py file.
-
-Contributing
-============
-
-Contributions are welcome! Please read our `Code of Conduct
-<https://github.com/adafruit/Adafruit_CircuitPython_vl53l0x/blob/master/CODE_OF_CONDUCT.md>`_
-before contributing to help this project stay welcoming.
-
-Documentation
-=============
-
-For information on building library documentation, please check out `this guide <https://learn.adafruit.com/creating-and-sharing-a-circuitpython-library/sharing-our-docs-on-readthedocs#sphinx-5-1>`_.

@@ -19,7 +19,7 @@ requirements-freeze:
 	${PYTHON} -m pip freeze > requirements.txt
 
 build:
-	${PYTHON} -m mpy_cross -mno-unicode -msmall-int-bits=31 adafruit_vl53l0x.py
+	${PYTHON} -m mpy_cross -mno-unicode -msmall-int-bits=31 vl53l0x.py
 
 ${ENVIRONMENT}:
 	${PYTHON} -m venv ${ENVIRONMENT}

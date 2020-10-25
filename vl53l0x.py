@@ -20,16 +20,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """
-`adafruit_vl53l0x`
+`micropython-vl53l0x`
 ====================================================
 
-CircuitPython driver for the VL53L0X distance sensor.  This code is adapted
+MicroPython driver for the VL53L0X distance sensor.  This code is adapted
 from the pololu driver here:
 https://github.com/pololu/vl53l0x-arduino
 
 See usage in the examples/vl53l0x_simpletest.py file.
 
-* Author(s): Tony DiCola
+* Original author(s): Tony DiCola
 
 Implementation Notes
 --------------------
@@ -39,17 +39,12 @@ Implementation Notes
 * Adafruit `VL53L0X Time of Flight Distance Sensor - ~30 to 1000mm
   <https://www.adafruit.com/product/3317>`_ (Product ID: 3317)
 
-**Software and Dependencies:**
+**Software:**
 
-* Adafruit CircuitPython firmware for the ESP8622 and M0-based boards:
-  https://github.com/adafruit/circuitpython/releases
-* Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
+* MicroPython 1.12
 """
 import time
 from micropython import const
-
-__version__ = "0.0.0-auto.0"
-__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_VL53L0X.git"
 
 # Configuration constants:
 _SYSRANGE_START = const(0x00)

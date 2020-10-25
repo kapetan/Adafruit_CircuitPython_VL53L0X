@@ -1,15 +1,12 @@
 # Simple demo of the VL53L0X distance sensor.
 # Will print the sensed range/distance every second.
 import time
-
-import board
-import busio
-
-import adafruit_vl53l0x
+import machine
+import vl53l0x
 
 # Initialize I2C bus and sensor.
-i2c = busio.I2C(board.SCL, board.SDA)
-vl53 = adafruit_vl53l0x.VL53L0X(i2c)
+i2c = machine.I2C(1, freq = 400000)
+vl53 = vl53l0x.VL53L0X(i2c)
 
 # Optionally adjust the measurement timing budget to change speed and accuracy.
 # See the example here for more details:

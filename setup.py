@@ -19,21 +19,14 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="adafruit-circuitpython-vl53l0x",
+    name="micropython-vl53l0x",
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
     description="CircuitPython library for VL53L0X time of flight distance sensor.",
     long_description=long_description,
     long_description_content_type="text/x-rst",
-    # The project's main homepage.
-    url="https://github.com/adafruit/Adafruit_CircuitPython_VL53L0X",
-    # Author details
-    author="Adafruit Industries",
-    author_email="circuitpython@adafruit.com",
-    install_requires=["Adafruit-Blinka", "adafruit-circuitpython-busdevice"],
-    # Choose your license
+    url="https://github.com/kapetan/MicroPython_VL53L0X",
     license="MIT",
-    # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -44,10 +37,7 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
     ],
-    # What does your project relate to?
-    keywords="adafruit vl53l0x time flight distance sensor"
-    "breakout hardware micropython circuitpython",
-    # You can just specify the packages manually here if your project is
-    # simple. Or you can use find_packages().
-    py_modules=["adafruit_vl53l0x"],
+    keywords="vl53l0x time flight distance sensor"
+    "breakout hardware micropython",
+    py_modules=find_packages()
 )
