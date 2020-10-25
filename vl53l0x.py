@@ -150,7 +150,6 @@ class VL53L0X:
     _BUFFER_40 = bytearray(5)
 
     def __init__(self, i2c, address=41, io_timeout_ms=0):
-        # pylint: disable=too-many-statements
         self._i2c = i2c
         self._address = address
         self.io_timeout_ms = io_timeout_ms
@@ -399,8 +398,6 @@ class VL53L0X:
         self._write_u8(_SYSRANGE_START, 0x00)
 
     def _get_vcsel_pulse_period(self, vcsel_period_type):
-        # pylint: disable=no-else-return
-        # Disable should be removed when refactor can be tested
         if vcsel_period_type == _VCSEL_PERIOD_PRE_RANGE:
             val = self._read_u8(_PRE_RANGE_CONFIG_VCSEL_PERIOD)
             return (((val) + 1) & 0xFF) << 1
@@ -491,7 +488,6 @@ class VL53L0X:
 
     @measurement_timing_budget.setter
     def measurement_timing_budget(self, budget_us):
-        # pylint: disable=too-many-locals
         assert budget_us >= 20000
         used_budget_us = 1320 + 960  # Start (diff from get) + end overhead
         tcc, dss, msrc, pre_range, final_range = self._get_sequence_step_enables()
@@ -529,10 +525,14 @@ class VL53L0X:
 
     @property
     def range(self):
+        """Performs either a single or a continuous reading
+        depending on the current mode.
+        """
         if self._continuous_mode:
             return self.read_range_continuous_millimeters()
         return self.read_range_single_millimeters()
 
+    # pylint: disable=invalid-name
     def read_range_continuous_millimeters(self):
         """Returns a range reading in millimeters when continuous mode is active.
         """

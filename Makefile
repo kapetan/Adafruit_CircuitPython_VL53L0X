@@ -1,7 +1,7 @@
 PYTHON = python3
 ENVIRONMENT = env
 
-.PHONY: virtual virtual-activate virtual-deactivate requirements-install requirements-freeze build
+.PHONY: virtual virtual-activate virtual-deactivate requirements-install requirements-freeze build test
 
 virtual: ${ENVIRONMENT}
 
@@ -20,6 +20,9 @@ requirements-freeze:
 
 build:
 	${PYTHON} -m mpy_cross -mno-unicode -msmall-int-bits=31 vl53l0x.py
+
+test:
+	${PYTHON} -m pylint vl53l0x.py setup.py
 
 ${ENVIRONMENT}:
 	${PYTHON} -m venv ${ENVIRONMENT}
