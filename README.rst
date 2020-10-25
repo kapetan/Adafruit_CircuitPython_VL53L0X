@@ -9,6 +9,7 @@ Usage
 =====
 
 .. code-block:: python
+
     import machine
     import vl53l0x
 
