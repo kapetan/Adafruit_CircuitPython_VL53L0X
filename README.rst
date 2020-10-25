@@ -3,7 +3,7 @@ MicroPython VL53L0X
 
 MicroPython driver for the VL53L0X distance sensor.
 
-Forked from [Adafruit CircuitPython VL53L0X](https://github.com/adafruit/Adafruit_CircuitPython_VL53L0X) and modified to work with MicroPython 1.12.
+Forked from `Adafruit CircuitPython VL53L0X <https://github.com/adafruit/Adafruit_CircuitPython_VL53L0X>`_ and modified to work with MicroPython 1.12.
 
 Usage
 =====
@@ -32,7 +32,7 @@ Usage
 Build
 =====
 
-Build `.mpy` files locally:
+Build **.mpy** files locally:
 
 .. code-block:: shell
 
@@ -44,4 +44,4 @@ Build `.mpy` files locally:
 Usage Example
 =============
 
-See usage in the examples/vl53l0x_simpletest.py file.
+See usage in the `examples/vl53l0x_simpletest.py <https://github.com/kapetan/MicroPython_VL53L0X/blob/master/examples/vl53l0x_simpletest.py>`_ file.
